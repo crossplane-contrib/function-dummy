@@ -2,5 +2,5 @@
 package main
 
 func main() {
-	Run("A Crossplane Composition Function that implements 'Patch & Transform' Composition.")
+	Run("A Crossplane Composition Function that returns whatever you ask it to.")
 }

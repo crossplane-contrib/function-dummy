@@ -46,9 +46,9 @@ spec:
                 kind: Composed
                 spec: {} # etc...
               ready: READY_TRUE
-          results:
-          - severity: SEVERITY_NORMAL
-            message: "I did the thing!"
+        results:
+        - severity: SEVERITY_NORMAL
+          message: "I did the thing!"
 ```
 
 ## Developing
