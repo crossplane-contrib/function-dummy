@@ -6,7 +6,10 @@ A [Crossplane] Composition Function that returns what you tell it to.
 
 This [Composition Function][function-design] just returns whatever
 `RunFunctionResponse` you tell it to. You provide a `RunFunctionResponse` in the
-Function's input. This Function is mostly useful for testing Crossplane itself.
+Function's input. The `desired` object will be merged onto any desired state
+passed in the `RunFunctionRequest` using [`proto.Merge`][merge] semantics.
+
+This Function is mostly useful for testing Crossplane itself.
 
 Note that this is a beta-style Function. It won't work with Crossplane v1.13 or
 earlier - it targets the [implementation of Functions][function-pr] coming with
@@ -34,9 +37,8 @@ spec:
         desired:
           composite:
             resource:
-              apiVersion: example.org/v1
-              kind: XR
-              spec: {} # etc...
+              spec:
+                widgets: 200
             connectionDetails:
               very: secret
           resources:
@@ -82,3 +84,4 @@ At the time of writing it's pushed manually via `docker push` using
 [function-pr]: https://github.com/crossplane/crossplane/pull/4500
 [docs-composition]: https://docs.crossplane.io/v1.13/getting-started/provider-aws-part-2/#create-a-deployment-template
 [#2581]: https://github.com/crossplane/crossplane/issues/2581
+[merge]: https://pkg.go.dev/github.com/golang/protobuf/proto#Merge
