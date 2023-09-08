@@ -73,6 +73,10 @@ $ docker run --rm -v $(pwd):/app -v ~/.cache/golangci-lint/v1.54.2:/root/.cache 
 $ docker build .
 ```
 
+This Function is pushed to `xpkg.upbound.io/crossplane-contrib/function-dummy`.
+At the time of writing it's pushed manually via `docker push` using
+`docker-credential-up` from https://github.com/upbound/up/.
+
 [Crossplane]: https://crossplane.io
 [function-design]: https://github.com/crossplane/crossplane/blob/3996f20/design/design-doc-composition-functions.md
 [function-pr]: https://github.com/crossplane/crossplane/pull/4500
