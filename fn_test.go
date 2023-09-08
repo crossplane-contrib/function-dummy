@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
@@ -33,13 +34,43 @@ func TestRunFunction(t *testing.T) {
 			reason: "The Function should return a fatal result if no input was specified",
 			args: args{
 				req: &fnv1beta1.RunFunctionRequest{
-					Meta:  &fnv1beta1.RequestMeta{Tag: "hello"},
-					Input: MustStructJSON(`{"apiVersion":"dummy.fn.crossplane.io","kind":"Results","response":{"results":[{"severity":"SEVERITY_NORMAL","message":"hi!"}]}}`),
+					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
+					Input: MustStructJSON(`{
+						"apiVersion": "dummy.fn.crossplane.io",
+						"kind": "Results",
+						"response": {
+							"desired": {
+								"composite": {
+									"resource": {
+										"spec": {
+											"widgets": 8
+										}
+									}
+								}
+							},
+							"results": [
+								{
+									"severity": "SEVERITY_NORMAL",
+									"message":"hi!"
+								}
+							]
+						}
+					}`),
+					Desired: &fnv1beta1.State{
+						Composite: &fnv1beta1.Resource{
+							Resource: MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR"}`),
+						},
+					},
 				},
 			},
 			want: want{
 				rsp: &fnv1beta1.RunFunctionResponse{
-					Meta: &fnv1beta1.ResponseMeta{Tag: "hello"},
+					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(DefaultTTL)},
+					Desired: &fnv1beta1.State{
+						Composite: &fnv1beta1.Resource{
+							Resource: MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR","spec":{"widgets":8}}`),
+						},
+					},
 					Results: []*fnv1beta1.Result{
 						{
 							Severity: fnv1beta1.Severity_SEVERITY_NORMAL,
@@ -56,12 +87,12 @@ func TestRunFunction(t *testing.T) {
 			f := &Function{log: logging.NewNopLogger()}
 			rsp, err := f.RunFunction(tc.args.ctx, tc.args.req)
 
-			if diff := cmp.Diff(rsp, tc.want.rsp, protocmp.Transform()); diff != "" {
-				t.Errorf("%s\nf.RunFunction(...): -got rsp, +want rsp:\n%s", tc.reason, diff)
+			if diff := cmp.Diff(tc.want.rsp, rsp, protocmp.Transform()); diff != "" {
+				t.Errorf("%s\nf.RunFunction(...): -want rsp, +got rsp:\n%s", tc.reason, diff)
 			}
 
-			if diff := cmp.Diff(err, tc.want.err, cmpopts.EquateErrors()); diff != "" {
-				t.Errorf("%s\nf.RunFunction(...): -got err, +want err:\n%s", tc.reason, diff)
+			if diff := cmp.Diff(tc.want.err, err, cmpopts.EquateErrors()); diff != "" {
+				t.Errorf("%s\nf.RunFunction(...): -want err, +got err:\n%s", tc.reason, diff)
 			}
 		})
 	}

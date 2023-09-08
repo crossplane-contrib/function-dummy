@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -153,4 +154,16 @@ func MustStructJSON(j string) *structpb.Struct {
 		panic(err)
 	}
 	return s
+}
+
+// NewResponseTo bootstraps a response to the supplied request. It automatically
+// copies the desired state from the request.
+func NewResponseTo(req *fnv1beta1.RunFunctionRequest, ttl time.Duration) *fnv1beta1.RunFunctionResponse {
+	return &fnv1beta1.RunFunctionResponse{
+		Meta: &fnv1beta1.ResponseMeta{
+			Tag: req.GetMeta().GetTag(),
+			Ttl: durationpb.New(ttl),
+		},
+		Desired: req.Desired,
+	}
 }

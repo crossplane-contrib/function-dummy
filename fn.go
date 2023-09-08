@@ -6,6 +6,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
 
@@ -23,25 +24,25 @@ type Function struct {
 func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
 	f.log.Info("Running Function", "tag", req.GetMeta().GetTag())
 
+	rsp := NewResponseTo(req, DefaultTTL)
+
 	in := &v1beta1.Response{}
 	if err := GetObject(in, req.GetInput()); err != nil {
-		rsp := &fnv1beta1.RunFunctionResponse{}
 		Fatal(rsp, errors.Wrapf(err, "cannot get Function input from %T", req))
 		return rsp, nil
 	}
 
-	rsp := &fnv1beta1.RunFunctionResponse{}
-	if err := protojson.Unmarshal(in.Response.Raw, rsp); err != nil {
-		rsp := &fnv1beta1.RunFunctionResponse{}
+	// We must pass through any desired state we're unconcerned with unmutated.
+	// protojson.Unmarshal clears the message it's passed, so we can't just
+	// unmarshal into rsp. Instead we unmarshal into an empty response, then
+	// merge that into rsp.
+	overlay := &fnv1beta1.RunFunctionResponse{}
+	if err := protojson.Unmarshal(in.Response.Raw, overlay); err != nil {
 		Fatal(rsp, errors.Wrapf(err, "cannot unmarshal RunFunctionResponse from %T", req))
 		return rsp, nil
 	}
 
-	// Copy over the tag (if any) from our request like a real Function should.
-	if rsp.Meta == nil {
-		rsp.Meta = &fnv1beta1.ResponseMeta{}
-	}
-	rsp.Meta.Tag = req.GetMeta().GetTag()
+	proto.Merge(rsp, overlay)
 
 	return rsp, nil
 }
