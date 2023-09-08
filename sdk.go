@@ -107,7 +107,11 @@ func NewServer(certsDir string) (*grpc.Server, error) {
 func NewLogger(debug bool) (logging.Logger, error) {
 	o := []zap.Option{zap.AddCallerSkip(1)}
 	if debug {
-		o = append(o, zap.IncreaseLevel(zap.DebugLevel))
+		zl, err := zap.NewDevelopment(o...)
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot create zap logger")
+		}
+		return logging.NewLogrLogger(zapr.NewLogger(zl)), nil
 	}
 	zl, err := zap.NewProduction(o...)
 	if err != nil {
