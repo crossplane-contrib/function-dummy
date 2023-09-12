@@ -12,6 +12,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
 	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
+	"github.com/crossplane/function-sdk-go/resource"
+	"github.com/crossplane/function-sdk-go/response"
 )
 
 func TestRunFunction(t *testing.T) {
@@ -35,7 +37,7 @@ func TestRunFunction(t *testing.T) {
 			args: args{
 				req: &fnv1beta1.RunFunctionRequest{
 					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
-					Input: MustStructJSON(`{
+					Input: resource.MustStructJSON(`{
 						"apiVersion": "dummy.fn.crossplane.io",
 						"kind": "Results",
 						"response": {
@@ -58,17 +60,17 @@ func TestRunFunction(t *testing.T) {
 					}`),
 					Desired: &fnv1beta1.State{
 						Composite: &fnv1beta1.Resource{
-							Resource: MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR"}`),
+							Resource: resource.MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR"}`),
 						},
 					},
 				},
 			},
 			want: want{
 				rsp: &fnv1beta1.RunFunctionResponse{
-					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(DefaultTTL)},
+					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
 					Desired: &fnv1beta1.State{
 						Composite: &fnv1beta1.Resource{
-							Resource: MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR","spec":{"widgets":8}}`),
+							Resource: resource.MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR","spec":{"widgets":8}}`),
 						},
 					},
 					Results: []*fnv1beta1.Result{
