@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 
-	"github.com/crossplane/crossplane-runtime/pkg/errors"
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
+
 	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
+	"github.com/crossplane/function-sdk-go/request"
+	"github.com/crossplane/function-sdk-go/response"
 
 	"github.com/crossplane-contrib/function-dummy/input/v1beta1"
 )
@@ -21,14 +24,14 @@ type Function struct {
 }
 
 // RunFunction runs the Function.
-func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
+func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
 	f.log.Info("Running Function", "tag", req.GetMeta().GetTag())
 
-	rsp := NewResponseTo(req, DefaultTTL)
+	rsp := response.To(req, response.DefaultTTL)
 
 	in := &v1beta1.Response{}
-	if err := GetObject(in, req.GetInput()); err != nil {
-		Fatal(rsp, errors.Wrapf(err, "cannot get Function input from %T", req))
+	if err := request.GetInput(req, in); err != nil {
+		response.Fatal(rsp, errors.Wrapf(err, "cannot get Function input from %T", req))
 		return rsp, nil
 	}
 
@@ -38,7 +41,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	// merge that into rsp.
 	overlay := &fnv1beta1.RunFunctionResponse{}
 	if err := protojson.Unmarshal(in.Response.Raw, overlay); err != nil {
-		Fatal(rsp, errors.Wrapf(err, "cannot unmarshal RunFunctionResponse from %T", req))
+		response.Fatal(rsp, errors.Wrapf(err, "cannot unmarshal RunFunctionResponse from %T", req))
 		return rsp, nil
 	}
 
