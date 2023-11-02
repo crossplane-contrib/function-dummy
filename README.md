@@ -1,19 +1,12 @@
 # function-dummy
+[![CI](https://github.com/crossplane-contrib/function-dummy/actions/workflows/ci.yml/badge.svg)](https://github.com/crossplane-contrib/function-dummy/actions/workflows/ci.yml) ![GitHub release (latest SemVer)](https://img.shields.io/github/release/crossplane-contrib/function-dummy)
 
-A [Crossplane] Composition Function that returns what you tell it to.
 
-## What is this?
+This [composition function][docs-functions] returns whatever you tell it to.
 
-This [Composition Function][function-design] just returns whatever
-`RunFunctionResponse` you tell it to. You provide a `RunFunctionResponse` in the
-Function's input. The `desired` object will be merged onto any desired state
-passed in the `RunFunctionRequest` using [`proto.Merge`][merge] semantics.
-
-This Function is mostly useful for testing Crossplane itself.
-
-Note that this is a beta-style Function. It won't work with Crossplane v1.13 or
-earlier - it targets the [implementation of Functions][function-pr] coming with
-Crossplane v1.14 in late October.
+Provide a YAML-serialized [`RunFunctionResponse`][bsr] as the function's input.
+The response's `desired` object will be merged onto any desired state that was
+passed to the function using [`proto.Merge`][merge] semantics.
 
 Here's an example:
 
@@ -24,8 +17,8 @@ metadata:
   name: test-crossplane
 spec:
   compositeTypeRef:
-    apiVersion: database.example.com/v1alpha1
-    kind: NoSQL
+    apiVersion: example.crossplane.io/v1beta1
+    kind: XR
   pipeline:
   - step: return-some-results
     functionRef:
@@ -37,7 +30,7 @@ spec:
         desired:
           composite:
             resource:
-              spec:
+              status:
                 widgets: 200
             connectionDetails:
               very: secret
@@ -53,35 +46,38 @@ spec:
           message: "I did the thing!"
 ```
 
-## Developing
+See the [example](example) directory for an example you can run locally using
+the Crossplane CLI:
 
-This Function doesn't use the typical Crossplane build submodule and Makefile,
-since we'd like Functions to have a less heavyweight developer experience.
-It mostly relies on regular old Go tools:
+```shell
+$ crossplane beta render xr.yaml composition.yaml functions.yaml
+```
+
+See the [composition functions documentation][docs-functions] to learn more
+about `crossplane beta render`.
+
+## Developing this function
+
+This function uses [Go][go], [Docker][docker], and the [Crossplane CLI][cli] to
+build functions.
 
 ```shell
 # Run code generation - see input/generate.go
 $ go generate ./...
 
-# Run tests
-$ go test -cover ./...
-?       github.com/crossplane-contrib/function-dummy/input/v1beta1      [no test files]
-ok      github.com/crossplane-contrib/function-dummy    0.006s  coverage: 25.8% of statements
+# Run tests - see fn_test.go
+$ go test ./...
 
-# Lint the code
-$ docker run --rm -v $(pwd):/app -v ~/.cache/golangci-lint/v1.54.2:/root/.cache -w /app golangci/golangci-lint:v1.54.2 golangci-lint run
+# Build the function's runtime image - see Dockerfile
+$ docker build . --tag=runtime
 
-# Build a Docker image - see Dockerfile
-$ docker build .
+# Build a function package - see package/crossplane.yaml
+$ crossplane xpkg build -f package --embed-runtime-image=runtime
 ```
 
-This Function is pushed to `xpkg.upbound.io/crossplane-contrib/function-dummy`.
-At the time of writing it's pushed manually via `docker push` using
-`docker-credential-up` from https://github.com/upbound/up/.
-
-[Crossplane]: https://crossplane.io
-[function-design]: https://github.com/crossplane/crossplane/blob/3996f20/design/design-doc-composition-functions.md
-[function-pr]: https://github.com/crossplane/crossplane/pull/4500
-[docs-composition]: https://docs.crossplane.io/v1.13/getting-started/provider-aws-part-2/#create-a-deployment-template
-[#2581]: https://github.com/crossplane/crossplane/issues/2581
+[docs-functions]: https://docs.crossplane.io/v1.14/concepts/composition-functions/
+[bsr]: https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1#apiextensions.fn.proto.v1beta1.RunFunctionResponse
 [merge]: https://pkg.go.dev/github.com/golang/protobuf/proto#Merge
+[go]: https://go.dev
+[docker]: https://www.docker.com
+[cli]: https://docs.crossplane.io/latest/cli

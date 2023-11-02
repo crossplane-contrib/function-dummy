@@ -1,0 +1,36 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: function-patch-and-transform
+spec:
+  compositeTypeRef:
+    apiVersion: example.crossplane.io/v1
+    kind: XR
+  mode: Pipeline
+  pipeline:
+  - step: return-some-results
+    functionRef:
+      name: function-dummy
+    input:
+      apiVersion: dummy.fn.crossplane.io/v1beta1
+      kind: Response
+      response:
+        desired:
+          composite:
+            resource:
+              status:
+                widgets: 200
+            connectionDetails:
+              very: secret
+          resources:
+            cool-resource:
+              resource:
+                apiVersion: example.org/v1
+                kind: Composed
+                spec:
+                  forProvider:
+                    widgets: 200
+              ready: READY_TRUE
+        results:
+        - severity: SEVERITY_NORMAL
+          message: "I did the thing!"

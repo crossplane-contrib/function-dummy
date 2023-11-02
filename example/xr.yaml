@@ -1,0 +1,6 @@
+# Replace this with your XR!
+apiVersion: example.crossplane.io/v1
+kind: XR
+metadata:
+  name: example-xr
+spec: {}  # This function ignores the XR. It only cares about its Composition input.
