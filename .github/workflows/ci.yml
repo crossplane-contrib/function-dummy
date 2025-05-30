@@ -119,7 +119,7 @@ jobs:
       - name: Upload Single-Platform Package
         uses: actions/upload-artifact@v4
         with:
-          name: packages
+          name: package-${{ matrix.arch }}
           path: "*.xpkg"
           if-no-files-found: error
           retention-days: 1
@@ -138,8 +138,8 @@ jobs:
       - name: Download Single-Platform Packages
         uses: actions/download-artifact@v4
         with:
-          name: packages
           path: .
+          merge-multiple: true
           pattern: "!*.dockerbuild" # This gets uploaded by docker/build-push-action but must be skipped: https://github.com/actions/toolkit/pull/1874
 
 
