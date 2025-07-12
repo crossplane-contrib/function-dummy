@@ -16,4 +16,7 @@ metadata:
       [`proto.Merge`](https://pkg.go.dev/github.com/golang/protobuf/proto#Merge)
       semantics. See the [README](https://github.com/crossplane-contrib/function-dummy)
       for examples and documentation.
-spec: {}
+spec:
+  capabilities:
+  - composition
+  - operation
