@@ -9,21 +9,19 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
-
-	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
+	"github.com/crossplane/function-sdk-go/logging"
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/response"
 )
 
 func TestRunFunction(t *testing.T) {
-
 	type args struct {
 		ctx context.Context
-		req *fnv1beta1.RunFunctionRequest
+		req *fnv1.RunFunctionRequest
 	}
 	type want struct {
-		rsp *fnv1beta1.RunFunctionResponse
+		rsp *fnv1.RunFunctionResponse
 		err error
 	}
 
@@ -35,8 +33,8 @@ func TestRunFunction(t *testing.T) {
 		"ResponseIsReturned": {
 			reason: "The Function should return a fatal result if no input was specified",
 			args: args{
-				req: &fnv1beta1.RunFunctionRequest{
-					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
+				req: &fnv1.RunFunctionRequest{
+					Meta: &fnv1.RequestMeta{Tag: "hello"},
 					Input: resource.MustStructJSON(`{
 						"apiVersion": "dummy.fn.crossplane.io",
 						"kind": "Results",
@@ -55,30 +53,34 @@ func TestRunFunction(t *testing.T) {
 									"severity": "SEVERITY_NORMAL",
 									"message":"hi!"
 								}
-							]
+							],
+							"output": {
+								"cool": true
+							}
 						}
 					}`),
-					Desired: &fnv1beta1.State{
-						Composite: &fnv1beta1.Resource{
+					Desired: &fnv1.State{
+						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR"}`),
 						},
 					},
 				},
 			},
 			want: want{
-				rsp: &fnv1beta1.RunFunctionResponse{
-					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
-					Desired: &fnv1beta1.State{
-						Composite: &fnv1beta1.Resource{
+				rsp: &fnv1.RunFunctionResponse{
+					Meta: &fnv1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
+					Desired: &fnv1.State{
+						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{"apiVersion":"example.org/v1","kind":"XR","spec":{"widgets":8}}`),
 						},
 					},
-					Results: []*fnv1beta1.Result{
+					Results: []*fnv1.Result{
 						{
-							Severity: fnv1beta1.Severity_SEVERITY_NORMAL,
+							Severity: fnv1.Severity_SEVERITY_NORMAL,
 							Message:  "hi!",
 						},
 					},
+					Output: resource.MustStructJSON(`{"cool": true}`),
 				},
 			},
 		},
