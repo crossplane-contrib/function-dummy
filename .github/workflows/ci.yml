@@ -19,9 +19,11 @@ env:
   DOCKER_BUILDX_VERSION: 'v0.23.0'
 
   # These environment variables are important to the Crossplane CLI install.sh
-  # script. They determine what version it installs.
-  XP_CHANNEL: master   # TODO(negz): Pin to stable once v1.14 is released.
-  XP_VERSION: current  # TODO(negz): Pin to a version once v1.14 is released.
+  # script. They determine what version it installs. This function installs the
+  # latest main branch build because we use function-dummy in E2E tests, so we
+  # often need to build it with unreleased features.
+  XP_CHANNEL: master
+  XP_VERSION: current
 
   # This CI job will automatically push new builds to xpkg.upbound.io if the
   # XPKG_ACCESS_ID and XPKG_TOKEN secrets are set in the GitHub respository (or
@@ -111,7 +113,7 @@ jobs:
           outputs: type=docker,dest=runtime-${{ matrix.arch }}.tar
 
       - name: Setup the Crossplane CLI
-        run: "curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh"
+        run: "curl -sL https://raw.githubusercontent.com/crossplane/crossplane/main/install.sh | sh"
 
       - name: Build Package
         run: ./crossplane xpkg build --package-file=${{ matrix.arch }}.xpkg --package-root=package/ --embed-runtime-image-tarball=runtime-${{ matrix.arch }}.tar
