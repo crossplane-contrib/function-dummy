@@ -2,7 +2,7 @@ module github.com/crossplane-contrib/function-dummy
 
 go 1.24
 
-toolchain go1.24.4
+toolchain go1.27.1
 
 require (
 	github.com/alecthomas/kong v1.12.0
